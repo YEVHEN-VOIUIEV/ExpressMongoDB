@@ -2,10 +2,24 @@
 
 import express from 'express';
 import pino from 'pino-http';
+import cors from 'cors';
+
+const whitelist = ['http://localhost:3000'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
 
 const PORT = 3000;
 
 const app = express();
+
+app.use(cors(/*corsOptions*/));
 
 app.use(
   pino({
