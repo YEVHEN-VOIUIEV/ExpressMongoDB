@@ -1,6 +1,7 @@
-// src/controllers/students.js
-
 import createHttpError from 'http-errors';
+
+import { parseSortParams } from '../utils/parseSortParams.js';
+
 
 import { 
     getAllStudents, 
@@ -14,9 +15,13 @@ import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 
 export const getStudentsController = async (req, res) => {
     const { page, perPage } = parsePaginationParams(req.query);
+    const { sortBy, sortOrder } = parseSortParams(req.query);
+
     const students = await getAllStudents({
         page,
         perPage,
+        sortBy,
+        sortOrder,
     });
 
     res.json({
