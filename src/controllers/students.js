@@ -1,5 +1,3 @@
-import createHttpError from 'http-errors';
-
 import { 
     getAllStudents, 
     getStudentById, 
@@ -16,6 +14,7 @@ export const getStudentsController = async (req, res) => {
     const { page, perPage } = parsePaginationParams(req.query);
     const { sortBy, sortOrder } = parseSortParams(req.query);
     const filter = parseFilterParams(req.query);
+    const successStatus = 200;
 
     const students = await getAllStudents({
         page,
@@ -25,23 +24,29 @@ export const getStudentsController = async (req, res) => {
         filter,
     });
 
-    res.json({
-        status: 200,
-        message: 'Successfully found students!',
-        data: students,
+    return res.status(successStatus).json({
+      status: successStatus,
+      message: 'Successfully found students!',
+      data: students,
     });
 };
 
 export const getStudentByIdController = async (req, res) => {
     const { studentId } = req.params;
     const student = await getStudentById(studentId);
+    const successStatus = 200;
+    const errorStatus = 404;
 
     if (!student) {
-        throw createHttpError(404, 'Student not found');
+        return res.status(errorStatus).json({
+            status: errorStatus,
+            message: `Student with id ${studentId} not found`,
+            data: null,
+        });
     }
 
-    res.json({
-        status: 200,
+    return res.status(successStatus).json({
+        status: successStatus,
         message: `Successfully found student with id ${studentId}!`,
         data: student,
     });
@@ -49,60 +54,75 @@ export const getStudentByIdController = async (req, res) => {
 
 export const createStudentController = async (req, res) => {
     const student = await createStudent(req.body);
+    const successStatus = 201;
 
-    res.status(201).json({
-        status: 201,
+    return res.status(successStatus).json({
+        status: successStatus,
         message: `Successfully created a student!`,
         data: student,
     });
 };
 
-export const deleteStudentController = async (req, res, next) => {
+export const deleteStudentController = async (req, res) => {
     const { studentId } = req.params;
+    const deleted = await deleteStudent(studentId);
+    const successStatus = 204;
+    const errorStatus = 404;
 
-    const student = await deleteStudent(studentId);
-
-    if (!student) {
-        next(createHttpError(404, 'Student not found'));
-        return;
+    if (!deleted) {
+        return res.status(errorStatus).json({
+            status: errorStatus,
+            message: `Student with id ${studentId} not found`,
+            data: null,
+        });
     }
 
-    res.status(204).send();
+    return res.sendStatus(successStatus);
 };
 
-export const upsertStudentController = async (req, res, next) => {
+export const upsertStudentController = async (req, res) => {
     const { studentId } = req.params;
 
     const result = await updateStudent(studentId, req.body, {
         upsert: true,
     });
 
+    const errorStatus = 404;
+
     if (!result) {
-        next(createHttpError(404, 'Student not found'));
-        return;
+        return res.status(errorStatus).json({
+            status: errorStatus,
+            message: `Student with id ${studentId} not found`,
+            data: null,
+        });
     }
 
-    const status = result.isNew ? 201 : 200;
+    const successStatus = result.isNew ? 201 : 200;
 
-    res.status(status).json({
-        status,
+    return res.status(successStatus).json({
+        status: successStatus,
         message: `Successfully upserted a student!`,
         data: result.student,
     });
 };
 
-export const patchStudentController = async (req, res, next) => {
+export const patchStudentController = async (req, res) => {
     const { studentId } = req.params;
-    const result = await updateStudent(studentId, req.body);
+    const updated = await updateStudent(studentId, req.body);
+    const successStatus = 200;
+    const errorStatus = 404;
 
-    if (!result) {
-        next(createHttpError(404, 'Student not found'));
-        return;
+    if (!updated) {
+        return res.status(errorStatus).json({
+            status: errorStatus,
+            message: `Student with id ${studentId} not found`,
+            data: null,
+        });
     }
 
-    res.json({
-        status: 200,
+    return res.status(successStatus).json({
+        status: successStatus,
         message: `Successfully patched a student!`,
-        data: result.student,
+        data: updated,
     });
 };
