@@ -8,6 +8,9 @@ import {
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
+import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
 
 
 export const getStudentsController = async (req, res) => {
@@ -108,7 +111,22 @@ export const upsertStudentController = async (req, res) => {
 
 export const patchStudentController = async (req, res) => {
     const { studentId } = req.params;
-    const updated = await updateStudent(studentId, req.body);
+    const photo = req.file;
+    let photoUrl;
+
+    if (photo) {
+        if (getEnvVar('ENABLE_CLOUDINARY') === 'true') {
+            photoUrl = await saveFileToCloudinary(photo);
+        } else {
+            photoUrl = await saveFileToUploadDir(photo);
+        }
+    }
+
+    const updated = await updateStudent(studentId, {
+        ...req.body,
+        photo: photoUrl,
+    });
+
     const successStatus = 200;
     const errorStatus = 404;
 

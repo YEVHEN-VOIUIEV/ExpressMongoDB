@@ -2,6 +2,10 @@ import { model, Schema } from 'mongoose';
 
 const studentsSchema = new Schema(
   {
+    parentId: {
+      type: Schema.Types.ObjectId, 
+      ref: 'users' 
+    },
     name: {
       type: String,
       required: true,
@@ -24,10 +28,7 @@ const studentsSchema = new Schema(
       required: true,
       default: false,
     },
-    parentId: {
-      type: Schema.Types.ObjectId, 
-      ref: 'users' 
-    },
+    photo: { type: String },
   },
   {
     timestamps: true,
